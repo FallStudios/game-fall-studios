@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catch the Ball Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      display: block;
+      background: #87CEEB; /* Sky blue */
+    }
+    #retryButton {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 10px 20px;
+      font-size: 20px;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #retryButton:hover {
+      background-color: #555;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <button id="retryButton">Retry</button>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const retryButton = document.getElementById("retryButton");
+
+    // Resize canvas
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Game variables
+    const paddle = {
+      width: 150,
+      height: 20,
+      x: canvas.width / 2 - 75,
+      y: canvas.height - 30,
+      speed: 15
+    };
+
+    const ball = {
+      x: Math.random() * canvas.width,
+      y: 0,
+      radius: 15,
+      speed: 5
+    };
+
+    let score = 0;
+    let gameOver = false;
+
+    // Paddle movement
+    let paddleDirection = 0;
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") paddleDirection = -1;
+      if (e.key === "ArrowRight") paddleDirection = 1;
+    });
+
+    document.addEventListener("keyup", () => {
+      paddleDirection = 0;
+    });
+
+    retryButton.addEventListener("click", () => {
+      score = 0;
+      gameOver = false;
+      resetBall();
+      retryButton.style.display = "none";
+      gameLoop();
+    });
+
+    // Game loop
+    function update() {
+      if (gameOver) return;
+
+      // Move paddle
+      paddle.x += paddleDirection * paddle.speed;
+
+      // Prevent paddle from leaving the screen
+      if (paddle.x < 0) paddle.x = 0;
+      if (paddle.x + paddle.width > canvas.width) paddle.x = canvas.width - paddle.width;
+
+      // Move ball
+      ball.y += ball.speed;
+
+      // Check for collision with paddle
+      if (
+        ball.x > paddle.x &&
+        ball.x < paddle.x + paddle.width &&
+        ball.y + ball.radius > paddle.y
+      ) {
+        score++;
+        resetBall();
+      }
+
+      // Check for missed ball
+      if (ball.y > canvas.height) {
+        gameOver = true;
+        retryButton.style.display = "block";
+      }
+    }
+
+    function resetBall() {
+      ball.x = Math.random() * canvas.width;
+      ball.y = 0;
+    }
+
+    function draw() {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw paddle
+      ctx.fillStyle = "#333";
+      ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+
+      // Draw ball
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "red";
+      ctx.fill();
+      ctx.closePath();
+
+      // Draw score
+      ctx.fillStyle = "#000";
+      ctx.font = "20px Arial";
+      ctx.fillText("Score: " + score, 10, 30);
+
+      if (gameOver) {
+        ctx.fillStyle = "#000";
+        ctx.font = "30px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("Game Over!", canvas.width / 2, canvas.height / 2 - 20);
+      }
+    }
+
+    function gameLoop() {
+      if (!gameOver) {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+      }
+    }
+
+    // Start the game
+    gameLoop();
+  </script>
+</body>
+</html>
